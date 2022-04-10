@@ -1,10 +1,10 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
 name: Create and publish a Docker image
-on: [ push, pull_request ]
+on:
+ push:
+ pull_request:
+ schedule:
+  # New image every sunday morning
+  - cron: '00 1 * * 0'
 
 env:
   REGISTRY: ghcr.io
@@ -18,9 +18,9 @@ jobs:
       packages: write
     strategy:
       matrix:
-        os:
-          - bullseye
-          - bookworm
+        variant:
+          - fakemachine-bullseye
+          - fakemachine-bookworm
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -36,16 +36,20 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.os }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.variant }}
           tags: |
             "type=ref,suffix=-{{sha}},event=branch"
-            "type=ref,suffix=-{{sha}},event=pr"
+            "type=ref,event=branch"
+            "type=ref,event=tag"
+            "type=ref,event=pr"
+            "type=schedule,pattern={{date 'YYYYMMDD'}}"
+            "type=schedule,pattern=weekly"
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: Dockerfile.${{ matrix.os }}
-          push: true
+          file: Dockerfile.${{ matrix.variant }}
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
