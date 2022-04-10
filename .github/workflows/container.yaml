@@ -3,8 +3,8 @@ on:
  push:
  pull_request:
  schedule:
-  # New image every sunday morning
-  - cron: '00 1 * * 0'
+  # New image every monday morning
+  - cron: '42 0 * * 1'
 
 env:
   REGISTRY: ghcr.io
