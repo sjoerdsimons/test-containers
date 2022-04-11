@@ -38,12 +38,11 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.variant }}
           tags: |
-            "type=ref,suffix=-{{sha}},event=branch"
             "type=ref,event=branch"
+            "type=ref,suffix=-{{sha}},event=branch"
+            "type=ref,suffix=-{{date 'YYYYMMDD'}},event=branch"
             "type=ref,event=tag"
             "type=ref,event=pr"
-            "type=schedule,pattern={{date 'YYYYMMDD'}}"
-            "type=schedule,pattern=weekly"
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
